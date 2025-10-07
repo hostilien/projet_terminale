@@ -135,12 +135,12 @@ def simulation(genomes, config):
         plt.title(f"Répartition des fitness - Génération {G}")
         plt.xlabel("Fitness")
         plt.ylabel("Nombre d'agents")
-        plt.savefig(f"fitness_gen_{G}.png")
+        plt.savefig(f"logs/fitness_gen_{G}.png")
         plt.clf()
 
         print(f"Gen {G} fitness moyenne: {s/len(genomes)}")
         print(len(log_positions), len(log_energies), len(log_food))
-        f = open("log"+str(G)+".txt", "w")
+        f = open("logs/log"+str(G)+".txt", "w")
         f.write("Generation "+str(G)+"\n")
         
         for t in range(len(log_positions)):
@@ -174,7 +174,11 @@ def run(config_file):
     p.add_reporter(neat.StdOutReporter(True))
     stats = neat.StatisticsReporter()
     p.add_reporter(stats)
-    p.add_reporter(neat.Checkpointer(10))
+    checkpoint = neat.Checkpointer(
+    generation_interval=10,
+    filename_prefix='checkpoints/neat-checkpoint-')
+    p.add_reporter(checkpoint)
+
     # Run for up to 300 generations
     winner = p.run(simulation, 500)
     with open("winner.pkl", "wb") as f:
@@ -186,7 +190,7 @@ def run(config_file):
     plt.xlabel("Generation")
     plt.ylabel("Fitness")
     plt.legend()
-    plt.savefig("fitness_over_time.png")
+    plt.savefig("logs/fitness_over_time.png")
 
     
 
