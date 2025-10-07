@@ -176,7 +176,7 @@ def run(config_file):
     p.add_reporter(stats)
     p.add_reporter(neat.Checkpointer(10))
     # Run for up to 300 generations
-    winner = p.run(simulation, 1000)
+    winner = p.run(simulation, 500)
     with open("winner.pkl", "wb") as f:
         pickle.dump(winner, f)
     best_fitness_per_gen = stats.get_fitness_stat(max)
