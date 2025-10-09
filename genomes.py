@@ -7,6 +7,7 @@ import neat
 import random
 import matplotlib.pyplot as plt
 N_STEPS = 200
+N_RUNS = 15
 L =32
 
 def init_simulation(genomes):
@@ -34,7 +35,7 @@ def vision(pos):
         for j in range(y-1, y+2):
             if 0 <= i < L and 0 <= j < L:
                 if map[i][j] == 0:
-                    vision.append(0)
+                    vision.append(float(tiles[i][j]))
                 elif map[i][j] == -1:
                     vision.append(2.0) # nourriture
                 else:
@@ -46,7 +47,7 @@ def vision(pos):
 
 
 
-gen_to_record = [0, 1, 30, 50, 99, 199, 299, 499, 999, 1999, 4999]
+gen_to_record = [0, 1, 30, 50, 99, 199, 299, 699, 499, 999, 1999, 4999]
 G = 0
 
 def simulation(genomes, config):
@@ -55,7 +56,7 @@ def simulation(genomes, config):
     for genome_id, (_, genome) in enumerate(genomes):
         genome.fitness = 0.0
 
-    for i in range(10):
+    for i in range(N_RUNS):
         
         positions, map, energies, food = init_simulation(genomes)
         log_positions = []
@@ -122,7 +123,7 @@ def simulation(genomes, config):
             log_food.append(food.copy())
 
     for genome_id, (_, genome) in enumerate(genomes):
-        genome.fitness /= 10.0
+        genome.fitness /= N_RUNS
 
     if G in gen_to_record:
         s = 0
@@ -180,7 +181,7 @@ def run(config_file):
     p.add_reporter(checkpoint)
 
     # Run for up to 300 generations
-    winner = p.run(simulation, 500)
+    winner = p.run(simulation, 1000)
     with open("winner.pkl", "wb") as f:
         pickle.dump(winner, f)
     best_fitness_per_gen = stats.get_fitness_stat(max)

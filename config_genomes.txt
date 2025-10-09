@@ -63,7 +63,7 @@ weight_init_stdev       = 1.0
 weight_max_value        = 30
 weight_min_value        = -30
 weight_mutate_power     = 0.5
-weight_mutate_rate      = 0.8
+weight_mutate_rate      = 0.5
 weight_replace_rate     = 0.1
 
 [DefaultSpeciesSet]
@@ -76,4 +76,4 @@ species_elitism      = 2
 
 [DefaultReproduction]
 elitism            = 3
-survival_threshold = 0.7
+survival_threshold = 0.3
