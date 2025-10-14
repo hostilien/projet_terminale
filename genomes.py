@@ -6,8 +6,8 @@ import os
 import neat
 import random
 import matplotlib.pyplot as plt
-N_RUNS = 10
-N_STEPS = 200
+N_RUNS = 20
+N_STEPS = 400
 L =32
 
 def init_simulation(genomes):
@@ -55,7 +55,7 @@ def simulation(genomes, config):
     nets = [neat.nn.FeedForwardNetwork.create(genome, config) for _, genome in genomes]
     for genome_id, (_, genome) in enumerate(genomes):
         genome.fitness = 0.0
-
+    life_time = [0 for _ in range(len(genomes))]
     for i in range(N_RUNS):
         
         positions, map, energies, food = init_simulation(genomes)
@@ -80,7 +80,7 @@ def simulation(genomes, config):
                     amange = False
 
                     net = nets[genome_id]
-                    input = vision(positions[genome_id])+[float(energies[genome_id])/30.0, positions[genome_id][0]/float(L), positions[genome_id][1]/float(L)]
+                    input = vision(positions[genome_id])+[float(energies[genome_id])/30.0, step/N_STEPS, positions[genome_id][0]/float(L), positions[genome_id][1]/float(L)]
                     input = np.array(input)/2.0
 
                     output = net.activate(input)
@@ -113,6 +113,7 @@ def simulation(genomes, config):
                         energies[genome_id] -= 0.5
                     
                     genome.fitness += 1.0
+                    life_time[genome_id] += 1
                     if amange:
                         genome.fitness += 2.0 #si il a mange, on augmente plus la fitness (recompenser le fait de manger)
 
@@ -128,13 +129,14 @@ def simulation(genomes, config):
 
     for genome_id, (_, genome) in enumerate(genomes):
         genome.fitness /= N_RUNS
+        life_time[genome_id] /= N_RUNS
 
     if G in gen_to_record:
         s = 0
         l_fitness = []
         for genome_id, (_, genome) in enumerate(genomes):
-            s += genome.fitness
-            l_fitness.append(genome.fitness)
+            s += life_time[genome_id]
+            l_fitness.append(life_time[genome_id])
 
         plt.hist(l_fitness, bins=[i for i in range(0, 200, 10)])
         plt.title(f"Répartition des fitness - Génération {G}")
@@ -185,7 +187,7 @@ def run(config_file):
     p.add_reporter(checkpoint)
 
     # Run for up to 300 generations
-    winner = p.run(simulation, 400)
+    winner = p.run(simulation, 200)
     with open("winner.pkl", "wb") as f:
         pickle.dump(winner, f)
     best_fitness_per_gen = stats.get_fitness_stat(max)
@@ -200,8 +202,8 @@ def run(config_file):
     
 
 from pathlib import Path
-config_path = Path(r"/Users/nilsdesurmont/Desktop/Informatique/projet_terminale/config_genomes.txt")
-# Si une fonction attend une str:
+#config_path = Path(r"/Users/nilsdesurmont/Desktop/Informatique/projet_terminale/config_genomes.txt")
+config_path = Path(r"C:\Users\cite scolaire 78\Documents\projet_terminale\config_genomes.txt")
 config_path = str(config_path)
 
 if __name__ == '__main__':

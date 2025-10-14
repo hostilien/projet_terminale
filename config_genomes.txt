@@ -6,7 +6,7 @@ reset_on_extinction       = False
 
 [DefaultGenome]
 # Topologie
-num_inputs                = 12
+num_inputs                = 13
 num_outputs               = 5
 num_hidden                = 0
 feed_forward       = True      
