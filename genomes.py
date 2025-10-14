@@ -6,6 +6,7 @@ import os
 import neat
 import random
 import matplotlib.pyplot as plt
+N_RUNS = 10
 N_STEPS = 200
 L =32
 
@@ -34,9 +35,9 @@ def vision(pos):
         for j in range(y-1, y+2):
             if 0 <= i < L and 0 <= j < L:
                 if map[i][j] == 0:
-                    vision.append(0)
+                    vision.append(float(tiles[i][j]))
                 elif map[i][j] == -1:
-                    vision.append(2.0) # nourriture
+                    vision.append(4.0) # nourriture
                 else:
                     vision.append(-1.0) # autre agent
             else:
@@ -46,7 +47,7 @@ def vision(pos):
 
 
 
-gen_to_record = [0, 1, 30, 50, 99, 199, 299, 499, 999, 1999, 4999]
+gen_to_record = [0, 1, 30, 50, 99, 199, 299, 399, 499, 799, 999, 1999, 4999]
 G = 0
 
 def simulation(genomes, config):
@@ -55,7 +56,7 @@ def simulation(genomes, config):
     for genome_id, (_, genome) in enumerate(genomes):
         genome.fitness = 0.0
 
-    for i in range(10):
+    for i in range(N_RUNS):
         
         positions, map, energies, food = init_simulation(genomes)
         log_positions = []
@@ -68,7 +69,7 @@ def simulation(genomes, config):
         
         for step in range(N_STEPS):
             tiles_fertiles = [(i, j) for i in range(L) for j in range(L) if tiles[i][j] == '1']
-            food = random.sample(tiles_fertiles, 5)
+            food = random.sample(tiles_fertiles, 10)
 
             for (x, y) in food:
                 if map[x][y] == 0:
@@ -76,9 +77,10 @@ def simulation(genomes, config):
 
             for genome_id, (_, genome) in enumerate(genomes):
                 if energies[genome_id] > 0:
+                    amange = False
 
                     net = nets[genome_id]
-                    input = vision(positions[genome_id])+[float(energies[genome_id])/30.0, float(step)/float(N_STEPS), positions[genome_id][0]/float(L), positions[genome_id][1]/float(L)]
+                    input = vision(positions[genome_id])+[float(energies[genome_id])/30.0, positions[genome_id][0]/float(L), positions[genome_id][1]/float(L)]
                     input = np.array(input)/2.0
 
                     output = net.activate(input)
@@ -102,6 +104,7 @@ def simulation(genomes, config):
                             energies[genome_id] -= 0.5 
                         if map[new_position[0]][new_position[1]] == -1: # il y avait de la nourriture
                             energies[genome_id] += 10.0
+                            amange = True
                     
                         map[positions[genome_id][0]][positions[genome_id][1]] = 0
                         positions[genome_id] = new_position
@@ -110,6 +113,8 @@ def simulation(genomes, config):
                         energies[genome_id] -= 0.5
                     
                     genome.fitness += 1.0
+                    if amange:
+                        genome.fitness += 2.0 #si il a mange, on augmente plus la fitness (recompenser le fait de manger)
 
             log_positions.append(positions.copy())
             log_energies.append(energies.copy())
@@ -122,7 +127,7 @@ def simulation(genomes, config):
             log_food.append(food.copy())
 
     for genome_id, (_, genome) in enumerate(genomes):
-        genome.fitness /= 10.0
+        genome.fitness /= N_RUNS
 
     if G in gen_to_record:
         s = 0
@@ -180,7 +185,7 @@ def run(config_file):
     p.add_reporter(checkpoint)
 
     # Run for up to 300 generations
-    winner = p.run(simulation, 500)
+    winner = p.run(simulation, 400)
     with open("winner.pkl", "wb") as f:
         pickle.dump(winner, f)
     best_fitness_per_gen = stats.get_fitness_stat(max)
@@ -195,7 +200,7 @@ def run(config_file):
     
 
 from pathlib import Path
-config_path = Path(r"C:\Users\cite scolaire 78\Documents\projet_terminale\config_genomes.txt")
+config_path = Path(r"/Users/nilsdesurmont/Desktop/Informatique/projet_terminale/config_genomes.txt")
 # Si une fonction attend une str:
 config_path = str(config_path)
 

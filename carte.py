@@ -204,7 +204,7 @@ def gen_game_random():
 
 
 from read_log import read_log
-log_pos_agents, log_energies, log_pos_food = read_log("log499.txt")
+log_pos_agents, log_energies, log_pos_food = read_log("logs/log399.txt")
 colors = [(0,0,0)]+[(random.randint(50, 255), random.randint(50, 255), random.randint(50, 255)) for i in range(len(log_pos_agents[0])-1)]
 
 def main():
