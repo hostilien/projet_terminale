@@ -4,13 +4,16 @@ def traiter(ligne):
     ligne = ligne.replace(",", "")
     ligne = ligne.split(" ")
     
-    l =  [int(i) for i in ligne]
+    l =  [int(i) for i in ligne ]
     
     return [(l[i], l[i+1]) for i in range(0, len(l), 2)]
 
 def read_log(filename):
     log = open(filename, "r")
     lines = log.readlines()
+    scores = lines[-1]
+    scores = [int(i) for i in scores[:-2].split(" ")]
+    del lines[-1]
     log_pos_agents = []
     log_pos_food = []
     log_energies = []
@@ -18,4 +21,4 @@ def read_log(filename):
         log_pos_agents.append(traiter(lines[id_l][:-2]))
         log_energies.append([float(i) for i in lines[id_l+1][:-2].split(" ")])
         log_pos_food.append(traiter(lines[id_l+2][:-2]))
-    return log_pos_agents, log_energies, log_pos_food
+    return log_pos_agents, log_energies, log_pos_food, scores

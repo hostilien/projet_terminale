@@ -37,7 +37,7 @@ def vision(pos):
                 if map[i][j] == 0:
                     vision.append(float(tiles[i][j]))
                 elif map[i][j] == -1:
-                    vision.append(4.0) # nourriture
+                    vision.append(2) # nourriture
                 else:
                     vision.append(-1.0) # autre agent
             else:
@@ -50,21 +50,27 @@ def vision(pos):
 gen_to_record = [0, 1, 30, 50, 99, 199, 299, 399, 499, 799, 999, 1999, 4999]
 G = 0
 
+
 def simulation(genomes, config):
+    
     global map, positions, G
     nets = [neat.nn.FeedForwardNetwork.create(genome, config) for _, genome in genomes]
     for genome_id, (_, genome) in enumerate(genomes):
         genome.fitness = 0.0
     life_time = [0 for _ in range(len(genomes))]
+    if G in gen_to_record:
+        log_score = [N_STEPS for _ in range(len(genomes))]
     for i in range(N_RUNS):
-        
         positions, map, energies, food = init_simulation(genomes)
-        log_positions = []
-        log_energies = []
-        log_food = []
-        log_positions.append(positions.copy())
-        log_energies.append(energies.copy())
-        log_food.append(food.copy())
+        dead = [False for _ in range(len(genomes))]
+        register = (G in gen_to_record and i==0)
+        if register:
+            log_positions = []
+            log_energies = []
+            log_food = []
+            log_positions.append(positions.copy())
+            log_energies.append(energies.copy())
+            log_food.append(food.copy())
 
         
         for step in range(N_STEPS):
@@ -104,49 +110,51 @@ def simulation(genomes, config):
                             energies[genome_id] -= 0.5 
                         if map[new_position[0]][new_position[1]] == -1: # il y avait de la nourriture
                             energies[genome_id] += 10.0
-                            amange = True
                     
                         map[positions[genome_id][0]][positions[genome_id][1]] = 0
                         positions[genome_id] = new_position
-                        map[new_position[0]][new_position[1]] = genome_id
+                        map[new_position[0]][new_position[1]] = genome_id+1 #plus 1 car 0 = case vide
                     else:
                         energies[genome_id] -= 0.5
                     
                     genome.fitness += 1.0
                     life_time[genome_id] += 1
-                    if amange:
-                        genome.fitness += 2.0 #si il a mange, on augmente plus la fitness (recompenser le fait de manger)
-
-            log_positions.append(positions.copy())
-            log_energies.append(energies.copy())
-            food = []
-            for x in range(L):
-                for y in range(L):
-                    if map[x][y] == -1:
-                        food.append((x, y))
-            
-            log_food.append(food.copy())
+                elif not dead[genome_id]:
+                    map[positions[genome_id][0]][positions[genome_id][1]] = 0 # l'agent meurt
+                    positions[genome_id] = (1000, 1000) # on l'envoie au cimetière, hors carte
+                    if register:
+                        log_score[genome_id] = step #faire gaffe si déjà mort pas augmenter score
+                    dead[genome_id] = True
+            if register:     
+                log_positions.append(positions.copy())
+                log_energies.append(energies.copy())
+                food = []
+                for x in range(L):
+                    for y in range(L):
+                        if map[x][y] == -1:
+                            food.append((x, y))
+                
+                log_food.append(food.copy())
 
     for genome_id, (_, genome) in enumerate(genomes):
         genome.fitness /= N_RUNS
         life_time[genome_id] /= N_RUNS
-
+    
     if G in gen_to_record:
+        
         s = 0
         l_fitness = []
         for genome_id, (_, genome) in enumerate(genomes):
             s += life_time[genome_id]
             l_fitness.append(life_time[genome_id])
 
-        plt.hist(l_fitness, bins=[i for i in range(0, 200, 10)])
+        plt.hist(l_fitness, bins=[i for i in range(0, N_STEPS, 10)])
         plt.title(f"Répartition des fitness - Génération {G}")
         plt.xlabel("Fitness")
         plt.ylabel("Nombre d'agents")
         plt.savefig(f"logs/fitness_gen_{G}.png")
         plt.clf()
 
-        print(f"Gen {G} fitness moyenne: {s/len(genomes)}")
-        print(len(log_positions), len(log_energies), len(log_food))
         f = open("logs/log"+str(G)+".txt", "w")
         f.write("Generation "+str(G)+"\n")
         
@@ -161,6 +169,9 @@ def simulation(genomes, config):
             for (x, y) in log_food[t]:
                 f.write(f"{(x, y)} ")
             f.write("\n\n")
+
+        for s in log_score:
+            f.write(f"{s} ")
 
         f.close()
     G+=1
@@ -187,7 +198,7 @@ def run(config_file):
     p.add_reporter(checkpoint)
 
     # Run for up to 300 generations
-    winner = p.run(simulation, 200)
+    winner = p.run(simulation, 300)
     with open("winner.pkl", "wb") as f:
         pickle.dump(winner, f)
     best_fitness_per_gen = stats.get_fitness_stat(max)

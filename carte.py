@@ -1,41 +1,24 @@
-# perlin_grid.py
-# Affiche une grille carrée (Pygame) basée sur un bruit de Perlin 2D.
-# Cases vertes si le bruit dépasse un seuil, sinon blanches.
-# Aucune lib externe au-delà de pygame nécessaire.
-
 import pygame
 import random
 import math
 
-# ---------- Paramètres ----------
-GRID_SIZE = 32          # nombre de cases par côté (grille GRID_SIZE x GRID_SIZE)
+GRID_SIZE = 32          # nombre de cases par côté
 TILE_SIZE = 22          # pixels par case
-
-SHOW_GRID_LINES = False # True pour dessiner les contours
-
-
 SIDEBAR_WIDTH = 100
 SIDEBAR_BG = (255, 255, 255)
 TEXT_COLOR = (20, 20, 20)
-
-
 BG_COLOR = (30, 30, 30)         # fond de fenêtre
-COLOR_GREEN = (45, 160, 60)     # terrain "herbe"
-COLOR_WHITE = (230, 230, 230)   # terrain "clair"
-SHOW_GRID_LINES = True          # ← active le contour de chaque case
+COLOR_GREEN = (45, 160, 60)     # couleur fertile
+COLOR_WHITE = (230, 230, 230)   # couleur pas fertile
 GRID_LINE_COLOR = (0, 0, 0)
 GRID_LINE_WIDTH = 1
-
-OUTER_BORDER = True             # ← cadre autour de la carte
 OUTER_BORDER_COLOR = (0, 0, 0)
 OUTER_BORDER_WIDTH = 2
-# ---------- Implémentation Perlin 2D (pur Python) ----------
-# Référence: Perlin classique avec permutation, gradients 2D, fade curve.
+gen_to_record = [0, 1, 30, 50, 99, 199, 299, 399, 499, 799, 999, 1999, 4999]
 
 
 
-# ---------- Carte de tuiles ----------
-def generate_tilemap():
+def generate_tilemap(): #loader la carte
     
     f = open("carte.txt", "r")
     tiles = []
@@ -43,8 +26,7 @@ def generate_tilemap():
     f.close()
     return tiles
 
-# ---------- Affichage Pygame ----------
-def draw_grid(screen, tiles):
+def draw_grid(screen, tiles):#dessiner le terrain
     h = len(tiles)
     w = len(tiles[0])
     for j in range(h):
@@ -56,48 +38,32 @@ def draw_grid(screen, tiles):
 
             rect = pygame.Rect(j * TILE_SIZE, i * TILE_SIZE, TILE_SIZE, TILE_SIZE)
             pygame.draw.rect(screen, color, rect)
-            if SHOW_GRID_LINES:
-                pygame.draw.rect(screen, GRID_LINE_COLOR, rect, GRID_LINE_WIDTH)
+            
+    outer = pygame.Rect(0, 0, w * TILE_SIZE, h * TILE_SIZE)
+    pygame.draw.rect(screen, OUTER_BORDER_COLOR, outer, OUTER_BORDER_WIDTH)
 
-    # Cadre extérieur autour de toute la grille
-    if OUTER_BORDER:
-        outer = pygame.Rect(0, 0, w * TILE_SIZE, h * TILE_SIZE)
-        pygame.draw.rect(screen, OUTER_BORDER_COLOR, outer, OUTER_BORDER_WIDTH)
-from pathlib import Path
-
-
-def draw_food(screen, position):
+def draw_food(screen, position): #afficher la nourriture
     y, x = position
-    pygame.draw.circle(screen, (250, 50, 50), ((x+1/2)*TILE_SIZE, (y+1/2)*TILE_SIZE), TILE_SIZE/3)
+    pygame.draw.circle(screen, (250, 255,0), ((x+1/2)*TILE_SIZE, (y+1/2)*TILE_SIZE), TILE_SIZE/3)
 
-def draw_agent(screen, position, color):
+def draw_agent(screen, position, color): #afficher un agent
     y, x = position
     pygame.draw.circle(screen, color, ((x+1/2)*TILE_SIZE, (y+1/2)*TILE_SIZE), TILE_SIZE/3)
 
-def draw_sidebar(screen, left_width, height, lines, *, title="Infos"):
-    # fond blanc
+def draw_sidebar(screen, left_width, height, lines, *, title="Infos"): #afficher la barre d'infos
     sidebar_rect = pygame.Rect(left_width, 0, SIDEBAR_WIDTH, height)
     pygame.draw.rect(screen, SIDEBAR_BG, sidebar_rect)
-
-    # texte
-    if not pygame.font.get_init():
-        pygame.font.init()
+    pygame.font.init()
     line_font  = pygame.font.Font(None, 24)
-
-
     y = 50
-    max_w = SIDEBAR_WIDTH - 24
+
     for line in lines:
         surf = line_font.render(line, True, TEXT_COLOR)
         screen.blit(surf, (left_width + 12, y))
-        y += 22
+        y += 22 #valeur au pif pour l'espacement entre les lignes
         
-
-
-
-
-
-def gen_game_random():
+"""""
+def gen_game_random(): #générer une partie aléatoire (pour les tests)
     pos_food = [(random.randint(0, GRID_SIZE-1), random.randint(0, GRID_SIZE-1)) for i in range(30)]
     colors = [(random.randint(50, 255), random.randint(50, 255), random.randint(50, 255)) for i in range(10)]
     positions = [[(random.randint(0, GRID_SIZE-1), random.randint(0, GRID_SIZE-1)) for i in range(10)]]
@@ -109,11 +75,13 @@ def gen_game_random():
             new_pos = (max(0, min(GRID_SIZE-1, positions[-2][id][0] + move[0])), max(0, min(GRID_SIZE-1, positions[-2][id][1] + move[1])))
             positions[-1].append(new_pos)
     return positions, colors, pos_food
-
+"""""
 
 from read_log import read_log
-log_pos_agents, log_energies, log_pos_food = read_log("logs/log299.txt")
-colors = [(0,0,0)]+[(random.randint(50, 255), random.randint(50, 255), random.randint(50, 255)) for i in range(len(log_pos_agents[0])-1)]
+
+log_pos_agents, log_energies, log_pos_food, scores = read_log("logs/log"+str(input(f"Entrez la génération à afficher parmi les générations suivantes : {gen_to_record} "))+".txt")
+N_STEPS = len(log_pos_agents)
+colors =[(i/N_STEPS*255,0,(1-i/N_STEPS)*255) for i in scores]
 
 def main():
     pygame.init()
@@ -144,7 +112,7 @@ def main():
             if log_energies[T][id]>0:
                 draw_agent(screen, log_pos_agents[T][id], colors[id])
         T+=1
-        if T >= len(log_pos_agents):
+        if T >= N_STEPS:
             T = 0
         # Exemple : afficher une image (coccinelle)
         """""
@@ -159,10 +127,7 @@ def main():
         f"Step: {T}"]
         draw_sidebar(screen, grid_px, grid_px, info_lines, title="Plateau")
         pygame.display.flip()
-        clock.tick(2)
-
-
-
+        clock.tick(3)
     pygame.quit()
 
 if __name__ == "__main__":
