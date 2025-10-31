@@ -1,3 +1,4 @@
 log*
 fitness*
 neat-checkpoint*
+gen_map.py

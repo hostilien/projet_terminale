@@ -6,7 +6,7 @@ import os
 import neat
 import random
 import matplotlib.pyplot as plt
-N_RUNS = 20
+N_RUNS = 25
 N_STEPS = 400
 L =32
 
@@ -197,10 +197,16 @@ def run(config_file):
     filename_prefix='checkpoints/neat-checkpoint-')
     p.add_reporter(checkpoint)
 
-    # Run for up to 300 generations
-    winner = p.run(simulation, 300)
+   
+    try:
+        winner = p.run(simulation, 500)
+    except neat.CompleteExtinctionException:
+        print("extinctionc occured")
+        winner = stats.best_genome()
+
     with open("winner.pkl", "wb") as f:
         pickle.dump(winner, f)
+    
     best_fitness_per_gen = stats.get_fitness_stat(max)
     mean_fitness_per_gen = stats.get_fitness_mean()
     plt.plot(best_fitness_per_gen, label="Best Fitness")
