@@ -184,10 +184,8 @@ def run(config_file):
                          neat.DefaultSpeciesSet, neat.DefaultStagnation,
                          config_file)
 
-    # Create the population, which is the top-level object for a NEAT run.
     p = neat.Population(config)
 
-    # Add a stdout reporter to show progress in the terminal.
     
     p.add_reporter(neat.StdOutReporter(True))
     stats = neat.StatisticsReporter()
