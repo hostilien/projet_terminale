@@ -1,119 +1,148 @@
-import tkinter as tk
-from tkinter import filedialog
-import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-import ast
+import pygame
+import random
+import math
+
+GRID_SIZE = 25          # nombre de cases par côté
+TILE_SIZE = 22          # pixels par case
+SIDEBAR_WIDTH = 100
+SIDEBAR_BG = (255, 255, 255)
+TEXT_COLOR = (20, 20, 20)
+BG_COLOR = (30, 30, 30)   
+
+COLOR_FOURMILIERE = (200, 100, 50)     # couleur de la fourmilière
+COLOR_FOOD = (25, 25,0)   # couleur de la nourriture
+COLOR_FOURMI = (45, 160, 60)     # couleur des fourmis
+COLOR_MUR = (100, 100, 100) # couleur des murs
+COLOR_PHEROMONE = (255, 0, 255) # couleur des phéromones
+GRID_LINE_COLOR = (0, 0, 0)
+GRID_LINE_WIDTH = 1
+OUTER_BORDER_COLOR = (0, 0, 0)
+OUTER_BORDER_WIDTH = 2
+
+gen_to_record = [0, 1, 30, 50, 99, 199, 299, 399, 499, 799, 999, 1999, 4999]
 
 
-# ---------- Parsing ----------
-def parse_positions(line):
-    tokens = line.strip().split(" ")
-    positions = []
-    for t in tokens:
-        if t:
-            positions.append(ast.literal_eval(t))  # "(x, y)" -> tuple
-    return positions
+
+def generate_tilemap(): #loader la carte
+    
+    f = open("carte_fourmiliere.txt", "r")
+    tiles = []
+    tiles = [i.split(" ") for i in f.readlines()]
+    f.close()
+    return tiles
+
+def draw_grid(screen, tiles, pheromones):#dessiner le terrain
+    h = len(tiles)
+    w = len(tiles[0])
+    for j in range(h):
+        for i in range(w):
+            if tiles[i][j] == '1':
+                color = COLOR_FOURMILIERE
+            elif tiles[i][j] == '-1':
+                color =  COLOR_MUR
+            else:
+                #couleur en gradiant en fonction de la quantité de phéromones
+                intensite = pheromones[i][j]
+                color = (min(255, int(COLOR_PHEROMONE[0] * intensite)), min(255, int(COLOR_PHEROMONE[1] * intensite)), min(255, int(COLOR_PHEROMONE[2] * intensite)))
 
 
-def parse_float_line(line):
-    return np.array([float(x) for x in line.strip().split(" ") if x])
+
+            rect = pygame.Rect(j * TILE_SIZE, i * TILE_SIZE, TILE_SIZE, TILE_SIZE)
+            pygame.draw.rect(screen, color, rect)
+            
+    outer = pygame.Rect(0, 0, w * TILE_SIZE, h * TILE_SIZE)
+    pygame.draw.rect(screen, OUTER_BORDER_COLOR, outer, OUTER_BORDER_WIDTH)
+
+def draw_food(screen, position, quantity): #afficher la nourriture
+
+    y, x = position
+    color = (min(255, int(COLOR_FOOD[0] * quantity)), min(255, int(COLOR_FOOD[1] * quantity)), min(255, int(COLOR_FOOD[2] * quantity)))
+    pygame.draw.circle(screen, color, ((x+1/2)*TILE_SIZE, (y+1/2)*TILE_SIZE), TILE_SIZE/3)
+
+def draw_agent(screen, position, color, charge): #afficher un agent
+    y, x = position
+    if charge > 0:
+        pygame.draw.circle(screen, color, ((x+1/2)*TILE_SIZE, (y+1/2)*TILE_SIZE), TILE_SIZE/5)
+    pygame.draw.circle(screen, color, ((x+1/2)*TILE_SIZE, (y+1/2)*TILE_SIZE), TILE_SIZE/3)
+
+def draw_sidebar(screen, left_width, height, lines, *, title="Infos"): #afficher la barre d'infos
+    sidebar_rect = pygame.Rect(left_width, 0, SIDEBAR_WIDTH, height)
+    pygame.draw.rect(screen, SIDEBAR_BG, sidebar_rect)
+    pygame.font.init()
+    line_font  = pygame.font.Font(None, 24)
+    y = 50
+
+    for line in lines:
+        surf = line_font.render(line, True, TEXT_COLOR)
+        screen.blit(surf, (left_width + 12, y))
+        y += 22 #valeur au pif pour l'espacement entre les lignes
+        
+"""""
+def gen_game_random(): #générer une partie aléatoire (pour les tests)
+    pos_food = [(random.randint(0, GRID_SIZE-1), random.randint(0, GRID_SIZE-1)) for i in range(30)]
+    colors = [(random.randint(50, 255), random.randint(50, 255), random.randint(50, 255)) for i in range(10)]
+    positions = [[(random.randint(0, GRID_SIZE-1), random.randint(0, GRID_SIZE-1)) for i in range(10)]]
+    moves = [[] for i in range(10)]
+    for n_step in range(30):
+        positions.append([])
+        for id in range(10):
+            move = [(0,0), (1, 0), (-1, 0), (0, 1), (0, -1)][random.randint(0, 4)]
+            new_pos = (max(0, min(GRID_SIZE-1, positions[-2][id][0] + move[0])), max(0, min(GRID_SIZE-1, positions[-2][id][1] + move[1])))
+            positions[-1].append(new_pos)
+    return positions, colors, pos_food
+"""""
+
+from read_log_1 import read_log
+
+log_pos_agents, log_charges, log_pos_food, log_pheromones = read_log("logs/log"+str(input(f"Entrez la génération à afficher parmi les générations suivantes : {gen_to_record} "))+".txt")
+N_STEPS = len(log_pos_agents)
 
 
-def load_log(path):
-    with open(path, "r") as f:
-        lines = f.readlines()
+def main():
+    pygame.init()
+    size = GRID_SIZE * TILE_SIZE
+    screen = pygame.display.set_mode((size + SIDEBAR_WIDTH, size), pygame.RESIZABLE)
 
-    positions_steps = []
-    pheromones_steps = []
-    food_steps = []
+    tiles = generate_tilemap()
 
-    i = 0
-    while i < len(lines):
-        if lines[i].strip() == "":
-            i += 1
-            continue
+    clock = pygame.time.Clock()
+    running = True
+    T = 0
+    while running:
+        # --- Events (ici tu ajouteras les contrôles et l'animation plus tard) ---
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+           
 
-        pos = parse_positions(lines[i])
-        phe = parse_float_line(lines[i + 1])
-        food = parse_float_line(lines[i + 2])
+        # --- Draw ---
 
-        positions_steps.append(pos)
-        pheromones_steps.append(phe)
-        food_steps.append(food)
+        screen.fill(BG_COLOR)
+        draw_grid(screen, tiles)
 
-        i += 4  # positions, pheromones, food, blank line
-
-    return positions_steps, pheromones_steps, food_steps
-
-
-# ---------- GUI ----------
-class LogViewer(tk.Tk):
-    def __init__(self):
-        super().__init__()
-        self.title("Log Viewer")
-        self.geometry("1000x700")
-
-        self.positions = None
-        self.pheromones = None
-        self.food = None
-
-        top = tk.Frame(self)
-        top.pack(fill=tk.X)
-
-        tk.Button(top, text="Ouvrir log", command=self.open_file).pack(side=tk.LEFT, padx=5)
-
-        self.step = tk.IntVar(value=0)
-        self.slider = tk.Scale(
-            top, from_=0, to=0, orient=tk.HORIZONTAL,
-            variable=self.step, command=lambda _: self.redraw()
-        )
-        self.slider.pack(fill=tk.X, expand=True, padx=10)
-
-        self.fig, self.ax = plt.subplots(figsize=(7, 6))
-        self.canvas = FigureCanvasTkAgg(self.fig, master=self)
-        self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
-
-    def open_file(self):
-        path = filedialog.askopenfilename(filetypes=[("Text files", "*.txt")])
-        if not path:
-            return
-
-        self.positions, self.pheromones, self.food = load_log(path)
-        self.slider.config(to=len(self.positions) - 1)
-        self.step.set(0)
-        self.redraw()
-
-    def redraw(self):
-        if self.positions is None:
-            return
-
-        i = self.step.get()
-        self.ax.clear()
-
-        # ----- pheromones -----
-        phe = self.pheromones[i]
-        size = int(np.sqrt(len(phe)))
-        phe_map = phe.reshape(size, size)
-
-        im = self.ax.imshow(phe_map, origin="lower")
-        self.fig.colorbar(im, ax=self.ax, fraction=0.046)
-
-        # ----- positions -----
-        pos = self.positions[i]
-        if pos:
-            xs, ys = zip(*pos)
-            self.ax.scatter(xs, ys, c="red", s=10, label="agents")
-
-        # ----- food -----
-        food = self.food[i]
-        ys, xs = np.where(food.reshape(size, size) > 0)
-        self.ax.scatter(xs, ys, c="green", s=30, marker="s", label="food")
-
-        self.ax.set_title(f"Step {i}")
-        self.ax.legend()
-        self.canvas.draw()
-
+        for f in log_pos_food[T]:
+            draw_food(screen, f)
+        N_AGENTS = len(log_pos_agents[T])
+        for id in range(N_AGENTS):
+            draw_agent(screen, log_pos_agents[T][id], COLOR_FOURMI, log_charges[T][id])
+        T+=1
+        if T >= N_STEPS:
+            T = 0
+        # Exemple : afficher une image (coccinelle)
+        """""
+        for id in range(10):
+            x, y = positions[T][id]
+            #corriger l'affichage de l'image pour qu'elle soit centrée dans la case
+            screen.blit(sprite, ((x-1/2)*TILE_SIZE-sprite.get_width()/4, (y-1/2)*TILE_SIZE-sprite.get_height()/4))
+        
+        """""
+        grid_px = GRID_SIZE * TILE_SIZE
+        info_lines = [
+        f"Step: {T}"]
+        draw_sidebar(screen, grid_px, grid_px, info_lines, title="Plateau")
+        pygame.display.flip()
+        clock.tick(3)
+    pygame.quit()
 
 if __name__ == "__main__":
-    LogViewer().mainloop()
+    main()
