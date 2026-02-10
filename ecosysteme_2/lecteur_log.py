@@ -92,9 +92,9 @@ def gen_game_random(): #générer une partie aléatoire (pour les tests)
     return positions, colors, pos_food
 """""
 
-from read_log_1 import read_log
+from read_log2 import read_log
 
-log_pos_agents, log_charges, log_pos_food, log_pheromones = read_log("logs/log"+str(input(f"Entrez la génération à afficher parmi les générations suivantes : {gen_to_record} "))+".txt")
+log_pos_agents, log_pheromones, log_pos_food,  log_charges = read_log("logs/log"+str(input(f"Entrez la génération à afficher parmi les générations suivantes : {gen_to_record} "))+".txt")
 N_STEPS = len(log_pos_agents)
 
 
@@ -118,10 +118,13 @@ def main():
         # --- Draw ---
 
         screen.fill(BG_COLOR)
-        draw_grid(screen, tiles)
+        draw_grid(screen, tiles, log_pheromones[T])
 
-        for f in log_pos_food[T]:
-            draw_food(screen, f)
+        for l in range(len(log_pos_food[T])):
+            for c in range(len(log_pos_food[T][l])):
+                if log_pos_food[T][l][c] > 0:
+                    draw_food(screen, (l, c), log_pos_food[T][l][c])
+                    
         N_AGENTS = len(log_pos_agents[T])
         for id in range(N_AGENTS):
             draw_agent(screen, log_pos_agents[T][id], COLOR_FOURMI, log_charges[T][id])
