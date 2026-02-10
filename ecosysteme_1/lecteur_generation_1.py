@@ -77,7 +77,7 @@ def gen_game_random(): #générer une partie aléatoire (pour les tests)
     return positions, colors, pos_food
 """""
 
-from read_log import read_log
+from read_log_1 import read_log
 
 log_pos_agents, log_energies, log_pos_food, scores = read_log("logs/log"+str(input(f"Entrez la génération à afficher parmi les générations suivantes : {gen_to_record} "))+".txt")
 N_STEPS = len(log_pos_agents)

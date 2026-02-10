@@ -192,7 +192,7 @@ def run(config_file):
     p.add_reporter(stats)
     checkpoint = neat.Checkpointer(
     generation_interval=10,
-    filename_prefix='checkpoints/neat-checkpoint-')
+    filename_prefix='checkpoints1/neat-checkpoint-')
     p.add_reporter(checkpoint)
 
    
@@ -212,13 +212,13 @@ def run(config_file):
     plt.xlabel("Generation")
     plt.ylabel("Fitness")
     plt.legend()
-    plt.savefig("logs/fitness_over_time.png")
+    plt.savefig("logs1/fitness_over_time.png")
 
     
 
 from pathlib import Path
 #config_path = Path(r"/Users/nilsdesurmont/Desktop/Informatique/projet_terminale/config_genomes.txt")
-config_path = Path(r"C:\Users\cite scolaire 78\Documents\projet_terminale\config_genomes.txt")
+config_path = Path(r"C:\Users\cite scolaire 78\Documents\projet_terminale\config_genomes1.txt")
 config_path = str(config_path)
 
 if __name__ == '__main__':

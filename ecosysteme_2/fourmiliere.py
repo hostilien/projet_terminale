@@ -162,10 +162,6 @@ def simulation(genomes, config):
             for charge in log_charge[step]:
                 log.write(str(charge)+ " ")
             log.write("\n")
-
-            for charge in log_charge[step]:
-                log.write(str(charge)+ " ")
-            log.write("\n")
             log.write("\n")
         log.close()
     G += 1
