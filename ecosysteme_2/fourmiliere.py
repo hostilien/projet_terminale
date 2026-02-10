@@ -4,7 +4,7 @@ import os
 import neat
 import random
 import matplotlib.pyplot as plt
-carte = open("carte_fourmiliere.txt", "r")
+carte = open("/Users/nilsdesurmont/Desktop/Informatique/projet_terminale/ecosysteme_2/carte_fourmiliere.txt", "r")
 tiles = [i.split(" ") for i in carte.readlines()]
 
 N_RUNS = 1
@@ -159,6 +159,10 @@ def simulation(genomes, config):
                 log.write(str(case)+ " ")
             log.write("\n")
 
+            for charge in log_charge[step]:
+                log.write(str(charge)+ " ")
+            log.write("\n")
+
             log.write("\n")
         log.close()
     G += 1
@@ -209,7 +213,7 @@ def run(config_file):
 
 from pathlib import Path
 #config_path = Path(r"/Users/nilsdesurmont/Desktop/Informatique/projet_terminale/config_genomes.txt")
-config_path = Path(r"C:\Users\cite scolaire 78\Documents\projet_terminale\ecosysteme_2\config_genomes2.txt")
+config_path = Path(r"/Users/nilsdesurmont/Desktop/Informatique/projet_terminale/ecosysteme_2/config_genomes2.txt")
 config_path = str(config_path)
 
 if __name__ == '__main__':
