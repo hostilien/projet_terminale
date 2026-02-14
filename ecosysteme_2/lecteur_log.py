@@ -10,7 +10,7 @@ TEXT_COLOR = (20, 20, 20)
 BG_COLOR = (30, 30, 30)   
 
 COLOR_FOURMILIERE = (200, 100, 50)     # couleur de la fourmilière
-COLOR_FOOD = (25, 25,0)   # couleur de la nourriture
+COLOR_FOOD = (50, 50,0)   # couleur de la nourriture
 COLOR_FOURMI = (45, 160, 60)     # couleur des fourmis
 COLOR_MUR = (100, 100, 100) # couleur des murs
 COLOR_PHEROMONE = (255, 0, 255) # couleur des phéromones
@@ -46,9 +46,11 @@ def draw_grid(screen, tiles, pheromones):#dessiner le terrain
                 color = (min(255, int(COLOR_PHEROMONE[0] * intensite)), min(255, int(COLOR_PHEROMONE[1] * intensite)), min(255, int(COLOR_PHEROMONE[2] * intensite)))
 
 
-
-            rect = pygame.Rect(j * TILE_SIZE, i * TILE_SIZE, TILE_SIZE, TILE_SIZE)
-            pygame.draw.rect(screen, color, rect)
+            try:
+                rect = pygame.Rect(j * TILE_SIZE, i * TILE_SIZE, TILE_SIZE, TILE_SIZE)
+                pygame.draw.rect(screen, color, rect)
+            except:
+                print(color)
             
     outer = pygame.Rect(0, 0, w * TILE_SIZE, h * TILE_SIZE)
     pygame.draw.rect(screen, OUTER_BORDER_COLOR, outer, OUTER_BORDER_WIDTH)
@@ -59,12 +61,12 @@ def draw_food(screen, position, quantity): #afficher la nourriture
     color = (min(255, int(COLOR_FOOD[0] * quantity)), min(255, int(COLOR_FOOD[1] * quantity)), min(255, int(COLOR_FOOD[2] * quantity)))
     pygame.draw.circle(screen, color, ((x+1/2)*TILE_SIZE, (y+1/2)*TILE_SIZE), TILE_SIZE/3)
 
-def draw_agent(screen, position, color, charge): #afficher un agent
+def draw_agent(screen, position, charge): #afficher un agent
     y, x = position
-    pygame.draw.circle(screen, color, ((x+1/2)*TILE_SIZE, (y+1/2)*TILE_SIZE), TILE_SIZE/3)
+    
+    pygame.draw.circle(screen, COLOR_FOURMI, ((x+1/2)*TILE_SIZE, (y+1/2)*TILE_SIZE), TILE_SIZE/3)
     if charge > 0:
         pygame.draw.circle(screen, COLOR_FOOD, ((x+1/2)*TILE_SIZE, (y+1/2)*TILE_SIZE), TILE_SIZE/5)
-    
 
 def draw_sidebar(screen, left_width, height, lines, *, title="Infos"): #afficher la barre d'infos
     sidebar_rect = pygame.Rect(left_width, 0, SIDEBAR_WIDTH, height)
@@ -95,7 +97,7 @@ def gen_game_random(): #générer une partie aléatoire (pour les tests)
 
 from read_log2 import read_log
 
-log_pos_agents, log_pheromones, log_pos_food,  log_charges = read_log("logs/log"+str(input(f"Entrez la génération à afficher parmi les générations suivantes : {gen_to_record} "))+".txt")
+log_pos_agents, log_pheromones, log_pos_food,  log_charges = read_log("logs/log30.txt")
 N_STEPS = len(log_pos_agents)
 
 
@@ -125,10 +127,10 @@ def main():
             for c in range(len(log_pos_food[T][l])):
                 if log_pos_food[T][l][c] > 0:
                     draw_food(screen, (l, c), log_pos_food[T][l][c])
-                    
+
         N_AGENTS = len(log_pos_agents[T])
         for id in range(N_AGENTS):
-            draw_agent(screen, log_pos_agents[T][id], COLOR_FOURMI, log_charges[T][id])
+            draw_agent(screen, log_pos_agents[T][id], log_charges[T][id])
         T+=1
         if T >= N_STEPS:
             T = 0
