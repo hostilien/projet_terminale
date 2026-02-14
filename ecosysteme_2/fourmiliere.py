@@ -26,7 +26,7 @@ def add_food(map_food):
 
 def init_simulation():
     N_POPULATION = 25
-    map1 = [[int(tiles[i][j]) for i in range(L)] for j in range(L)]
+    map1 = [[int(tiles[i][j]) for j in range(L)] for i in range(L)]
     map_food = [[0 for _ in range(L)] for _ in range(L)]
     map_pheromones = np.zeros((L, L))
     charge = [0 for _ in range(N_POPULATION)]
@@ -126,13 +126,18 @@ def simulation(genomes, config):
 
                         nx, ny = x + dx, y + dy
                         if 0 <= nx < L and 0 <= ny < L and map1[nx][ny] == 0:
+                            if tiles[x][y] == -1:
+                                print("alerte")
+                                
                             map1[x][y] = 0
                             map1[nx][ny] = num_individu
                             positions[num_individu - 1] = (nx, ny)
                             # Interaction avec la nourriture
+                            #recuperer de la nourriture
                             if map_food[nx][ny] > 0 and charge[num_individu - 1] == 0:
                                 charge[num_individu - 1] = 1
                                 map_food[nx][ny] -= 1
+                            #deposer de la nourriture
                             elif tiles[nx][ny] == "1" and charge[num_individu - 1] == 1:
                                 genome.fitness += 10.0
                                 charge[num_individu - 1] = 0
@@ -140,7 +145,6 @@ def simulation(genomes, config):
                         if charge[num_individu - 1] == 1:
                             map_pheromones[x][y] += 1.0
                         else:
-        
                             map_pheromones[x][y] += 0.5
         genome.fitness /= N_RUNS
     if G in gen_to_record:

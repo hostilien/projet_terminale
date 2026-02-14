@@ -25,7 +25,7 @@ gen_to_record = [0, 1, 30, 50, 99, 199, 299, 399, 499, 799, 999, 1999, 4999]
 
 def generate_tilemap(): #loader la carte
     
-    f = open("carte_fourmiliere.txt", "r")
+    f = open("/Users/nilsdesurmont/Desktop/Informatique/projet_terminale/ecosysteme_2/carte_fourmiliere.txt", "r")
     tiles = []
     tiles = [i.split(" ") for i in f.readlines()]
     f.close()
@@ -61,9 +61,10 @@ def draw_food(screen, position, quantity): #afficher la nourriture
 
 def draw_agent(screen, position, color, charge): #afficher un agent
     y, x = position
-    if charge > 0:
-        pygame.draw.circle(screen, color, ((x+1/2)*TILE_SIZE, (y+1/2)*TILE_SIZE), TILE_SIZE/5)
     pygame.draw.circle(screen, color, ((x+1/2)*TILE_SIZE, (y+1/2)*TILE_SIZE), TILE_SIZE/3)
+    if charge > 0:
+        pygame.draw.circle(screen, COLOR_FOOD, ((x+1/2)*TILE_SIZE, (y+1/2)*TILE_SIZE), TILE_SIZE/5)
+    
 
 def draw_sidebar(screen, left_width, height, lines, *, title="Infos"): #afficher la barre d'infos
     sidebar_rect = pygame.Rect(left_width, 0, SIDEBAR_WIDTH, height)
