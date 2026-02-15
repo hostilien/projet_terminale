@@ -5,7 +5,7 @@ import neat
 import random
 import matplotlib.pyplot as plt
 import time
-carte = open("carte_fourmiliere.txt", "r")
+carte = open("ecosysteme_2/carte_fourmiliere.txt", "r")
 carte = [i.split(" ") for i in carte.readlines()]
 
 N_RUNS = 5
@@ -91,82 +91,6 @@ def vision(pos):
 gen_to_record = [0, 1, 30, 50, 99, 199, 299, 399, 499, 799, 999, 1999, 4999]
 G = 0
 
-def eval(genome, config):
-    N_runs = 5
-    fitness = 0
-    net = neat.nn.FeedForwardNetwork.create(genome, config)
-    for i_run in range (N_runs):
-            N_FOURMIS, tiles,map_agents, map_food, map_pheromones, positions, charge = init_simulation()
-            for i_step in range(N_STEPS):
-                map_pheromones *= (1 - FACTEUR_EVAPORATION)
-                for pos in positions:
-                    x, y = pos
-                    num_individu = map_agents[x][y]
-                    x, y = pos
-                    vision = []
-                    for dx in [-1, 0, 1]:
-                        for dy in [-1, 0, 1]:
-                            nx, ny = x + dx, y + dy
-                            if 0 <= nx < L and 0 <= ny < L:
-                                if tiles[nx][ny] != 0:
-                                    vision.append(tiles[nx][ny])  
-                                elif map_agents[nx][ny] > 0:
-                                    vision.append(-1)  # autre agent
-                                elif map_food[nx][ny] > 0:
-                                    vision.append(map_food[nx][ny])  # nourriture
-                                else:
-                                    vision.append(0) # case vide
-                            
-                            else:
-                                vision.append(-1)  # mur
-
-                    for dx in [-1, 0, 1]:
-                        for dy in [-1, 0, 1]:
-                            nx, ny = x + dx, y + dy
-                            if 0 <= nx < L and 0 <= ny < L:
-                                vision.append(map_pheromones[nx][ny])
-                            else:
-                                vision.append(-1)  # mur
-                    vision.append(x)
-                    vision.append(y)
-                    vision.append(charge[num_individu - 1])
-                    
-                    output = net.activate(vision)
-                    direction = output.index(max(output))
-                    deplacement = [(0, -1), (1, 0), (0, 1), (-1, 0)]  # haut, droite, bas, gauche
-                    if direction==4:
-                        dx, dy = (0, 0)  # ne rien faire
-                    elif direction==5:
-                        dx, dy = deplacement[random.randint(0,3)]  # déplacement aléatoire
-
-                    else:
-
-                        dx, dy = deplacement[direction]
-
-                    nx, ny = x + dx, y + dy
-                    if 0 <= nx < L and 0 <= ny < L and map_agents[nx][ny] == 0 and tiles[nx][ny] != -1:  # vérifier que la case est libre et pas un mur
-                        map_agents[x][y] = 0
-                        map_agents[nx][ny] = num_individu
-                        positions[num_individu - 1] = (nx, ny)
-                        # Interaction avec la nourriture
-                        if map_food[nx][ny] > 0 and charge[num_individu - 1] == 0:
-                            charge[num_individu - 1] = 1
-                            fitness += 2.0  # manger de la nourriture augmente la fitness
-                            map_food[nx][ny] -= 1
-                        elif tiles[nx][ny] == 1 and charge[num_individu - 1] == 1:
-                            fitness += 15.0
-                            charge[num_individu - 1] = 0
-                        elif charge[num_individu - 1] == 1:
-                            fitness-=0.1  # déposer des phéromones en portant de la nourriture
-                        # Dépôt de phéromones                                           
-                    if charge[num_individu - 1] == 1:
-                        map_pheromones[x][y] += 1.0
-                    else:
-    
-                        map_pheromones[x][y] += 0.5
-    fitness /= N_RUNS
-    return fitness
-
 def simulation(genomes, config):
     global tiles, map_agents, map_food, map_pheromones, G, charge
     nets = [neat.nn.FeedForwardNetwork.create(genome, config) for _, genome in genomes]
@@ -201,6 +125,8 @@ def simulation(genomes, config):
                     num_individu = map_agents[x][y]
                     if num_individu > 0: #espaces codées par 0, fourmis par 1 à N_FOURMIS
                         input_vision = vision((x, y))
+                        print(type(nets))
+                        print(type(nets[genome_id]))
                         output = nets[genome_id].activate(input_vision)
                         direction = output.index(max(output))
                         deplacement = [(0, -1), (1, 0), (0, 1), (-1, 0)]  # haut, droite, bas, gauche
@@ -295,7 +221,7 @@ def run(config_file):
     
 
 from pathlib import Path
-config_path = r"C:/Users/cite scolaire 78/Documents/projet_terminale/ecosysteme_2/config_genomes2.txt"
+config_path = r"ecosysteme_2/config_genomes2.txt"
 config_path = str(config_path)
 
 if __name__ == '__main__':

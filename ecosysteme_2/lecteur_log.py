@@ -25,7 +25,7 @@ gen_to_record = [0, 1, 30, 50, 99, 199, 299, 399, 499, 799, 999, 1999, 4999]
 
 def generate_tilemap(): #loader la carte
     
-    f = open("/Users/nilsdesurmont/Desktop/Informatique/projet_terminale/ecosysteme_2/carte_fourmiliere.txt", "r")
+    f = open("ecosysteme_2/carte_fourmiliere.txt", "r")
     tiles = []
     tiles = [i.split(" ") for i in f.readlines()]
     f.close()
@@ -79,25 +79,11 @@ def draw_sidebar(screen, left_width, height, lines, *, title="Infos"): #afficher
         surf = line_font.render(line, True, TEXT_COLOR)
         screen.blit(surf, (left_width + 12, y))
         y += 22 #valeur au pif pour l'espacement entre les lignes
-        
-"""""
-def gen_game_random(): #générer une partie aléatoire (pour les tests)
-    pos_food = [(random.randint(0, GRID_SIZE-1), random.randint(0, GRID_SIZE-1)) for i in range(30)]
-    colors = [(random.randint(50, 255), random.randint(50, 255), random.randint(50, 255)) for i in range(10)]
-    positions = [[(random.randint(0, GRID_SIZE-1), random.randint(0, GRID_SIZE-1)) for i in range(10)]]
-    moves = [[] for i in range(10)]
-    for n_step in range(30):
-        positions.append([])
-        for id in range(10):
-            move = [(0,0), (1, 0), (-1, 0), (0, 1), (0, -1)][random.randint(0, 4)]
-            new_pos = (max(0, min(GRID_SIZE-1, positions[-2][id][0] + move[0])), max(0, min(GRID_SIZE-1, positions[-2][id][1] + move[1])))
-            positions[-1].append(new_pos)
-    return positions, colors, pos_food
-"""""
+
 
 from read_log2 import read_log
 
-log_pos_agents, log_pheromones, log_pos_food,  log_charges = read_log("logs/log30.txt")
+log_pos_agents, log_pheromones, log_pos_food,  log_charges = read_log("logs/log9999.txt")
 N_STEPS = len(log_pos_agents)
 
 
@@ -131,17 +117,13 @@ def main():
         N_AGENTS = len(log_pos_agents[T])
         for id in range(N_AGENTS):
             draw_agent(screen, log_pos_agents[T][id], log_charges[T][id])
+            x,y = log_pos_agents[T][id]
+            if tiles[y][x] == -1 :
+                print("alerte")
         T+=1
         if T >= N_STEPS:
             T = 0
-        # Exemple : afficher une image (coccinelle)
-        """""
-        for id in range(10):
-            x, y = positions[T][id]
-            #corriger l'affichage de l'image pour qu'elle soit centrée dans la case
-            screen.blit(sprite, ((x-1/2)*TILE_SIZE-sprite.get_width()/4, (y-1/2)*TILE_SIZE-sprite.get_height()/4))
-        
-        """""
+
         grid_px = GRID_SIZE * TILE_SIZE
         info_lines = [
         f"Step: {T}"]

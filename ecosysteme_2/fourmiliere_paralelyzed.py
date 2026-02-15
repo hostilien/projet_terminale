@@ -5,16 +5,15 @@ import neat
 import random
 import matplotlib.pyplot as plt
 import time
-carte = open("carte_fourmiliere.txt", "r")
+carte = open("ecosysteme_2/carte_fourmiliere.txt", "r")
 carte = [i.split(" ") for i in carte.readlines()]
 
-N_RUNS = 5
+N_RUNS = 10
 N_STEPS = 150
 L =25
 N_FOOD_INIT = 5
 SIZE_FOOD = 3
-FACTEUR_EVAPORATION = 0.1
-N_FOURMIS = 25
+FACTEUR_EVAPORATION = 0.02
 def add_food(map_food):
     x,y = random.randint(0,L-1), random.randint(0,L-1)
     while (x**2+y**2)**(1/2) < 8: 
@@ -28,7 +27,7 @@ def add_food(map_food):
     return map_food
 
 def init_simulation():
-    N_POPULATION = 25
+    N_POPULATION = 4
     tiles = [[int(carte[i][j]) for j in range(L)] for i in range(L)]
     map_agents = [[0 for _ in range(L)] for _ in range(L)] # 0 = case vide, >0 = id agent
     map_food = [[0 for _ in range(L)] for _ in range(L)]
@@ -95,6 +94,7 @@ def eval(genome, config):
                     vision.append(charge[num_individu - 1])
                     
                     output = net.activate(vision)
+                    choix_pheromone = output[6]
                     direction = output.index(max(output))
                     deplacement = [(0, -1), (1, 0), (0, 1), (-1, 0)]  # haut, droite, bas, gauche
                     if direction==4:
@@ -102,7 +102,7 @@ def eval(genome, config):
                     elif direction==5:
                         dx, dy = deplacement[random.randint(0,3)]  # déplacement aléatoire
 
-                    else:
+                    elif direction!= 6:
 
                         dx, dy = deplacement[direction]
 
@@ -121,12 +121,14 @@ def eval(genome, config):
                             charge[num_individu - 1] = 0
                         elif charge[num_individu - 1] == 1:
                             fitness-=0.1  # déposer des phéromones en portant de la nourriture
-                        # Dépôt de phéromones                                           
-                    if charge[num_individu - 1] == 1:
+                        # Dépôt de phéromones   
+                    map_pheromones[x][y] += choix_pheromone
+                                    
+                    """if charge[num_individu - 1] == 1:
                         map_pheromones[x][y] += 1.0
                     else:
     
-                        map_pheromones[x][y] += 0.5
+                        map_pheromones[x][y] += 0.5"""
     fitness /= N_RUNS
     return fitness
 
@@ -136,10 +138,6 @@ import pickle
 import matplotlib.pyplot as plt
 import os
 from pathlib import Path
-
-# >>> ta fonction eval_genome(genome, config) doit exister au niveau module <<<
-# def eval_genome(genome, config):
-#     ...
 
 def run(config_file):
     config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
@@ -152,18 +150,19 @@ def run(config_file):
     stats = neat.StatisticsReporter()
     p.add_reporter(stats)
 
-    # --- PARALLÈLE ICI ---
+    # run les simulations en parallele
     n_workers = max(1, multiprocessing.cpu_count() - 1)
     pe = neat.ParallelEvaluator(n_workers, eval)
 
     try:
-        winner = p.run(pe.evaluate, 31)   # <<< remplace simulation par pe.evaluate
+        winner = p.run(pe.evaluate, 100) 
     except neat.CompleteExtinctionException:
         print("extinction occured")
         winner = stats.best_genome()
 
-    with open("winner.pkl", "wb") as f:
+    with open("ecosysteme_2/winner.pkl", "wb") as f:
         pickle.dump(winner, f)
+        print("Winner enregsitré")
 
     best_fitness_per_gen = stats.get_fitness_stat(max)
     mean_fitness_per_gen = stats.get_fitness_mean()
@@ -175,7 +174,7 @@ def run(config_file):
     plt.savefig("fitness_over_time.png")
 
 
-config_path = r"C:/Users/cite scolaire 78/Documents/projet_terminale/ecosysteme_2/config_genomes2.txt"
+config_path = r"ecosysteme_2/config_genomes2.txt"
 config_path = str(config_path)
 
 if __name__ == "__main__":

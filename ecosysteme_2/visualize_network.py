@@ -63,7 +63,7 @@ def draw_neat_network(genome, config, node_names=None):
 
 
 
-with open("winner.pkl", "rb") as f:
+with open("ecosysteme_2/winner.pkl", "rb") as f:
     winner = pickle.load(f)
 
 config = neat.Config(
@@ -71,7 +71,7 @@ config = neat.Config(
     neat.DefaultReproduction,
     neat.DefaultSpeciesSet,
     neat.DefaultStagnation,
-    "config_genomes2.txt"
+    "ecosysteme_2/config_genomes2.txt"
 )
 
 
