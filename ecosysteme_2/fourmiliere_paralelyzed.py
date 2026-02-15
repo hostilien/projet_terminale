@@ -5,7 +5,7 @@ import neat
 import random
 import matplotlib.pyplot as plt
 import time
-carte = open("ecosysteme_2/carte_fourmiliere.txt", "r")
+carte = open("carte_fourmiliere.txt", "r")
 carte = [i.split(" ") for i in carte.readlines()]
 
 N_RUNS = 15
@@ -161,7 +161,7 @@ def run(config_file):
         print("extinction occured")
         winner = stats.best_genome()
 
-    with open("ecosysteme_2/winner.pkl", "wb") as f:
+    with open("winner.pkl", "wb") as f:
         pickle.dump(winner, f)
         print("Winner enregsitré")
 
@@ -175,7 +175,7 @@ def run(config_file):
     plt.savefig("fitness_over_time.png")
 
 
-config_path = r"ecosysteme_2/config_genomes2.txt"
+config_path = r"config_genomes2.txt"
 config_path = str(config_path)
 
 if __name__ == "__main__":

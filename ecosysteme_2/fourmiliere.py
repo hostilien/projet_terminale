@@ -5,7 +5,7 @@ import neat
 import random
 import matplotlib.pyplot as plt
 import time
-carte = open("ecosysteme_2/carte_fourmiliere.txt", "r")
+carte = open("carte_fourmiliere.txt", "r")
 carte = [i.split(" ") for i in carte.readlines()]
 
 N_RUNS = 15
