@@ -295,6 +295,7 @@ def run(config_file):
     
 
 from pathlib import Path
+config_path = r"C:/Users/cite scolaire 78/Documents/projet_terminale/ecosysteme_2/config_genomes2.txt"
 config_path = str(config_path)
 
 if __name__ == '__main__':
