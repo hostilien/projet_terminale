@@ -51,43 +51,6 @@ def init_simulation():
     return N_POPULATION, tiles, map_agents, map_food, map_pheromones, indices_positions, charge
 
 
-
-
-
-def vision(pos):
-    x, y = pos
-    vision = []
-    for dx in [-1, 0, 1]:
-        for dy in [-1, 0, 1]:
-            nx, ny = x + dx, y + dy
-            if 0 <= nx < L and 0 <= ny < L:
-                if tiles[nx][ny] != 0:
-                    vision.append(tiles[nx][ny])  
-                elif map_agents[nx][ny] > 0:
-                    vision.append(-1)  # autre agent
-                elif map_food[nx][ny] > 0:
-                    vision.append(map_food[nx][ny])  # nourriture
-                else:
-                    vision.append(0) # case vide
-            
-            else:
-                vision.append(-1)  # mur
-
-    for dx in [-1, 0, 1]:
-        for dy in [-1, 0, 1]:
-            nx, ny = x + dx, y + dy
-            if 0 <= nx < L and 0 <= ny < L:
-                vision.append(map_pheromones[nx][ny])
-            else:
-                vision.append(-1)  # mur
-    vision.append(x)
-    vision.append(y)
-    num_individu = map_agents[x][y]
-    vision.append(charge[num_individu - 1])  # charge de la fourmi
-    return vision
-
-
-
 gen_to_record = [0, 1, 30, 50, 99, 199, 299, 399, 499, 799, 999, 1999, 4999]
 G = 0
 
@@ -167,98 +130,16 @@ def eval(genome, config):
     fitness /= N_RUNS
     return fitness
 
-def simulation(genomes, config):
-    global tiles, map_agents, map_food, map_pheromones, G, charge
-    nets = [neat.nn.FeedForwardNetwork.create(genome, config) for _, genome in genomes]
-    if G in gen_to_record:
-        print("Recording generation ", G)
+import multiprocessing
+import neat
+import pickle
+import matplotlib.pyplot as plt
+import os
+from pathlib import Path
 
-        log_charge = []
-        log_positions = []
-        log_pheromones = []
-        log_food = []
-
-    for genome_id, (_, genome) in enumerate(genomes):
-        genome.fitness = 0.0
-
-        for i_fourmiliere in range(N_RUNS):
-            N_FOURMIS, tiles,map_agents, map_food, map_pheromones, positions, charge = init_simulation()
-
-            
-
-            for i_step in range(N_STEPS):
-
-                if G in gen_to_record and i_fourmiliere==0:
-                    log_charge.append(charge.copy())
-                    log_positions.append(positions.copy())
-                    log_pheromones.append(map_pheromones.flatten().copy())
-                    log_food.append(np.array(map_food.copy()).flatten())
-
-                # Évaporation des phéromones
-                map_pheromones *= (1 - FACTEUR_EVAPORATION)
-                for pos in positions:
-                    x, y = pos
-                    num_individu = map_agents[x][y]
-                    if num_individu > 0: #espaces codées par 0, fourmis par 1 à N_FOURMIS
-                        input_vision = vision((x, y))
-                        output = nets[genome_id].activate(input_vision)
-                        direction = output.index(max(output))
-                        deplacement = [(0, -1), (1, 0), (0, 1), (-1, 0)]  # haut, droite, bas, gauche
-                        if direction==4:
-                            dx, dy = (0, 0)  # ne rien faire
-                        elif direction==5:
-                            dx, dy = deplacement[random.randint(0,3)]  # déplacement aléatoire
-
-                        else:
-
-                            dx, dy = deplacement[direction]
-
-                        nx, ny = x + dx, y + dy
-                        if 0 <= nx < L and 0 <= ny < L and map_agents[nx][ny] == 0 and tiles[nx][ny] != -1:  # vérifier que la case est libre et pas un mur
-                            map_agents[x][y] = 0
-                            map_agents[nx][ny] = num_individu
-                            positions[num_individu - 1] = (nx, ny)
-                            # Interaction avec la nourriture
-                            #recuperer de la nourriture
-                            if map_food[nx][ny] > 0 and charge[num_individu - 1] == 0:
-                                charge[num_individu - 1] = 1
-                                genome.fitness += 2.0  # manger de la nourriture augmente la fitness
-                                map_food[nx][ny] -= 1
-                            elif tiles[nx][ny] == 1 and charge[num_individu - 1] == 1:
-                                genome.fitness += 15.0
-                                charge[num_individu - 1] = 0
-                            elif charge[num_individu - 1] == 1:
-                                genome.fitness-=0.1  # déposer des phéromones en portant de la nourriture
-                            # Dépôt de phéromones                                           
-                        if charge[num_individu - 1] == 1:
-                            map_pheromones[x][y] += 1.0
-                        else:
-                            map_pheromones[x][y] += 0.5
-        genome.fitness /= N_RUNS
-    if G in gen_to_record:
-
-        log = open("logs/log"+str(G)+".txt", "w")
-        for step in range(N_STEPS):
-            for pos in log_positions[step]:
-                log.write(str(pos)+" ")
-            log.write("\n")
-
-            for case in log_pheromones[step]:
-                log.write(str(round(case, 3))+ " ")
-            log.write("\n")
-
-            for case in log_food[step]:
-                log.write(str(case)+ " ")
-            log.write("\n")
-
-            for charge in log_charge[step]:
-                log.write(str(charge)+ " ")
-            log.write("\n")
-            log.write("\n")
-        log.close()
-    G += 1
-
-        
+# >>> ta fonction eval_genome(genome, config) doit exister au niveau module <<<
+# def eval_genome(genome, config):
+#     ...
 
 def run(config_file):
     config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
@@ -267,22 +148,23 @@ def run(config_file):
 
     p = neat.Population(config)
 
-    
     p.add_reporter(neat.StdOutReporter(True))
     stats = neat.StatisticsReporter()
     p.add_reporter(stats)
-   
+
+    # --- PARALLÈLE ICI ---
+    n_workers = max(1, multiprocessing.cpu_count() - 1)
+    pe = neat.ParallelEvaluator(n_workers, eval)
 
     try:
-        winner = p.run(simulation, 31)
+        winner = p.run(pe.evaluate, 31)   # <<< remplace simulation par pe.evaluate
     except neat.CompleteExtinctionException:
-        print("extinctionc occured")
+        print("extinction occured")
         winner = stats.best_genome()
 
     with open("winner.pkl", "wb") as f:
         pickle.dump(winner, f)
-    
-    
+
     best_fitness_per_gen = stats.get_fitness_stat(max)
     mean_fitness_per_gen = stats.get_fitness_mean()
     plt.plot(best_fitness_per_gen, label="Best Fitness")
@@ -292,12 +174,9 @@ def run(config_file):
     plt.legend()
     plt.savefig("fitness_over_time.png")
 
-    
 
-from pathlib import Path
+config_path = r"C:/Users/cite scolaire 78/Documents/projet_terminale/ecosysteme_2/config_genomes2.txt"
 config_path = str(config_path)
 
-if __name__ == '__main__':
-
-    local_dir = os.path.dirname(__file__)
+if __name__ == "__main__":
     run(config_path)
