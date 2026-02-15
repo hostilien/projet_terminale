@@ -203,8 +203,7 @@ def register_run(genome, G, config):
             num_individu = map_agents[x][y]
             if num_individu > 0: #espaces codées par 0, fourmis par 1 à N_FOURMIS
                 input_vision = vision((x, y))
-                        print(type(nets))
-                        print(type(nets[genome_id]))
+                       
                 output =net.activate(input_vision)
                 direction = output.index(max(output))
                 deplacement = [(0, -1), (1, 0), (0, 1), (-1, 0)]  # haut, droite, bas, gauche
