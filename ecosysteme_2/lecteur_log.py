@@ -97,7 +97,7 @@ def gen_game_random(): #générer une partie aléatoire (pour les tests)
 
 from read_log2 import read_log
 
-log_pos_agents, log_pheromones, log_pos_food,  log_charges = read_log("logs/log30.txt")
+log_pos_agents, log_pheromones, log_pos_food,  log_charges = read_log("logs/logbest.txt")
 N_STEPS = len(log_pos_agents)
 
 

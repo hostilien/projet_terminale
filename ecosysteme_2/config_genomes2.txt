@@ -1,8 +1,9 @@
 [NEAT]
 fitness_criterion         = max
 fitness_threshold         = 10000
-pop_size                  = 35
+pop_size                  = 48
 reset_on_extinction       = False
+no_fitness_termination = False
 
 [DefaultGenome]
 # Topologie
@@ -10,7 +11,7 @@ num_inputs                = 21
 num_outputs               = 6
 num_hidden                = 0
 feed_forward       = True      
-initial_connection = partial 0.50
+initial_connection = partial 0.3
 
 
 # Activations / agrégation
@@ -26,17 +27,19 @@ weight_init_mean          = 0.0
 weight_init_stdev         = 1.0
 weight_max_value          = 30.0
 weight_min_value          = -30.0
-weight_mutate_rate        = 0.25
-weight_mutate_power       = 1.2
+weight_mutate_rate        = 0.15
+weight_mutate_power       = 0.4
 weight_replace_rate       = 0.05
+weight_init_type = gaussian
 
 bias_init_mean            = 0.0
 bias_init_stdev           = 1.0
 bias_max_value            = 30.0
 bias_min_value            = -30.0
-bias_mutate_rate          = 0.25
-bias_mutate_power         = 0.6
+bias_mutate_rate          = 0.1
+bias_mutate_power         = 0.3
 bias_replace_rate         = 0.05
+bias_init_type = gaussian
 
 response_init_mean        = 1.0
 response_init_stdev       = 0.0
@@ -45,14 +48,19 @@ response_min_value        = -30.0
 response_mutate_rate      = 0.0
 response_mutate_power     = 0.0
 response_replace_rate     = 0.0
+response_init_type = gaussian
 
 # Innovation structurelle
-conn_add_prob             = 0.08
+conn_add_prob             = 0.1
 conn_delete_prob          = 0.05
-node_add_prob             = 0.02
-node_delete_prob          = 0.2
+node_add_prob             = 0.03
+node_delete_prob          = 0.08
 enabled_default           = True
 enabled_mutate_rate       = 0.01
+enabled_rate_to_true_add = 0.0
+enabled_rate_to_false_add = 0.0
+single_structural_mutation = true
+structural_mutation_surer = default
 
 # Compatibilité / Spéciation
 compatibility_disjoint_coefficient = 1.0
@@ -62,11 +70,11 @@ compatibility_weight_coefficient   = 0.5
 compatibility_threshold   = 3.0
 
 [DefaultStagnation]
-species_fitness_func      = max
-max_stagnation            = 30
-
+species_fitness_func      = mean
+max_stagnation            = 40
 species_elitism           = 0
 
 [DefaultReproduction]
 elitism                   = 3
-survival_threshold        = 0.25
+min_species_size = 1
+survival_threshold        = 0.15
