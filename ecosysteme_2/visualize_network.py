@@ -63,7 +63,7 @@ def draw_neat_network(genome, config, node_names=None):
 
 
 
-with open("winner.pkl", "rb") as f:
+with open("ecosysteme_2/winner.pkl", "rb") as f:
     winner = pickle.load(f)
 
 config = neat.Config(
@@ -71,7 +71,7 @@ config = neat.Config(
     neat.DefaultReproduction,
     neat.DefaultSpeciesSet,
     neat.DefaultStagnation,
-    "config_genomes2.txt"
+    "ecosysteme_2/config_genomes2.txt"
 )
 
 node_names = {-1 : "hautGauche", -2:"haut", -3:"hautDroite", -4:"gauche", -5:"case", -6:"droite", -7:"basGauche", -8: "bas", -9: "basDroitePh", -10 : "hautGauchePh", -11:"hautPh", -12:"hautDroite", -13:"gauchePh", -14:"casePh", -15:"droitePh", -16:"basGauchePh", -17: "basPh", -18: "basDroitePh", -19:"x", -20:"y", -21: "charge", 0: "haut", 1:"droite", 2:"bas", 3:"gauche", 4: "attendre", 5:"Rnd"}
