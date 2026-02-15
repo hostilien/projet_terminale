@@ -8,12 +8,14 @@ import time
 carte = open("ecosysteme_2/carte_fourmiliere.txt", "r")
 carte = [i.split(" ") for i in carte.readlines()]
 
-N_RUNS = 10
-N_STEPS = 150
+N_RUNS = 15
+N_STEPS = 300
 L =25
 N_FOOD_INIT = 5
 SIZE_FOOD = 3
-FACTEUR_EVAPORATION = 0.02
+FACTEUR_EVAPORATION = 0.1
+TILES = [[int(carte[i][j]) for j in range(L)] for i in range(L)]
+INDICES_POSITIONS = [(i,j) for i in range(L) for j in range(L) if TILES[i][j] == 1]
 def add_food(map_food):
     x,y = random.randint(0,L-1), random.randint(0,L-1)
     while (x**2+y**2)**(1/2) < 8: 
@@ -28,14 +30,13 @@ def add_food(map_food):
 
 def init_simulation():
     N_POPULATION = 4
-    tiles = [[int(carte[i][j]) for j in range(L)] for i in range(L)]
     map_agents = [[0 for _ in range(L)] for _ in range(L)] # 0 = case vide, >0 = id agent
     map_food = [[0 for _ in range(L)] for _ in range(L)]
     map_pheromones = np.zeros((L, L))
     charge = [0 for _ in range(N_POPULATION)]
-    indices_positions = [(i,j) for i in range(L) for j in range(L) if tiles[i][j] == 1] #on commence sur la fourmilière
+ #on commence sur la fourmilière
     for i in range(N_POPULATION):
-        x, y = indices_positions[i]
+        x, y = INDICES_POSITIONS[i]
         map_agents[x][y] = i+1  #les fourmis sont numérotées de 1 à N_POPULATION
     for _ in range(N_FOOD_INIT):
         x,y = random.randint(0,L-1), random.randint(0,L-1)
@@ -47,7 +48,7 @@ def init_simulation():
                 if 0 <= nx < L and 0 <= ny < L:
                     if carte[nx][ny] == '0':
                         map_food[nx][ny] += SIZE_FOOD
-    return N_POPULATION, tiles, map_agents, map_food, map_pheromones, indices_positions, charge
+    return N_POPULATION, map_agents, map_food, map_pheromones, INDICES_POSITIONS, charge
 
 
 gen_to_record = [0, 1, 30, 50, 99, 199, 299, 399, 499, 799, 999, 1999, 4999]
@@ -58,7 +59,7 @@ def eval(genome, config):
     fitness = 0
     net = neat.nn.FeedForwardNetwork.create(genome, config)
     for i_run in range (N_runs):
-            N_FOURMIS, tiles,map_agents, map_food, map_pheromones, positions, charge = init_simulation()
+            N_FOURMIS, map_agents, map_food, map_pheromones, positions, charge = init_simulation()
             for i_step in range(N_STEPS):
                 map_pheromones *= (1 - FACTEUR_EVAPORATION)
                 for pos in positions:
@@ -70,8 +71,8 @@ def eval(genome, config):
                         for dy in [-1, 0, 1]:
                             nx, ny = x + dx, y + dy
                             if 0 <= nx < L and 0 <= ny < L:
-                                if tiles[nx][ny] != 0:
-                                    vision.append(tiles[nx][ny])  
+                                if TILES[nx][ny] != 0:
+                                    vision.append(TILES[nx][ny])  
                                 elif map_agents[nx][ny] > 0:
                                     vision.append(-1)  # autre agent
                                 elif map_food[nx][ny] > 0:
@@ -107,7 +108,7 @@ def eval(genome, config):
                         dx, dy = deplacement[direction]
 
                     nx, ny = x + dx, y + dy
-                    if 0 <= nx < L and 0 <= ny < L and map_agents[nx][ny] == 0 and tiles[nx][ny] != -1:  # vérifier que la case est libre et pas un mur
+                    if 0 <= nx < L and 0 <= ny < L and map_agents[nx][ny] == 0 and TILES[nx][ny] != -1:  # vérifier que la case est libre et pas un mur
                         map_agents[x][y] = 0
                         map_agents[nx][ny] = num_individu
                         positions[num_individu - 1] = (nx, ny)
@@ -116,11 +117,11 @@ def eval(genome, config):
                             charge[num_individu - 1] = 1
                             fitness += 2.0  # manger de la nourriture augmente la fitness
                             map_food[nx][ny] -= 1
-                        elif tiles[nx][ny] == 1 and charge[num_individu - 1] == 1:
+                        elif TILES[nx][ny] == 1 and charge[num_individu - 1] == 1:
                             fitness += 15.0
                             charge[num_individu - 1] = 0
-                        elif charge[num_individu - 1] == 1:
-                            fitness-=0.1  # déposer des phéromones en portant de la nourriture
+                        #elif charge[num_individu - 1] == 1:
+                        #    fitness-=0.1  # déposer des phéromones en portant de la nourriture
                         # Dépôt de phéromones   
                     map_pheromones[x][y] += choix_pheromone
                                     

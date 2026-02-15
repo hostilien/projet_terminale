@@ -4,7 +4,7 @@ import math
 
 GRID_SIZE = 25          # nombre de cases par côté
 TILE_SIZE = 22          # pixels par case
-SIDEBAR_WIDTH = 100
+SIDEBAR_WIDTH = 200
 SIDEBAR_BG = (255, 255, 255)
 TEXT_COLOR = (20, 20, 20)
 BG_COLOR = (30, 30, 30)   
@@ -97,12 +97,62 @@ def main():
     clock = pygame.time.Clock()
     running = True
     T = 0
+    paused = False
+    step_per_frame = 1
+    jump = 10
+    typed = ""
     while running:
         # --- Events (ici tu ajouteras les contrôles et l'animation plus tard) ---
         for event in pygame.event.get():
+
             if event.type == pygame.QUIT:
                 running = False
-           
+
+            elif event.type == pygame.KEYDOWN:
+
+                # Pause / reprise
+                if event.key == pygame.K_SPACE:
+                    paused = not paused
+
+                # Pas à pas (fonctionne même en pause)
+                elif event.key == pygame.K_RIGHT:
+                    T = min(N_STEPS - 1, T + 1)
+                elif event.key == pygame.K_LEFT:
+                    T = max(0, T - 1)
+
+                # Sauts
+                elif event.key == pygame.K_PAGEDOWN:
+                    T = min(N_STEPS - 1, T + jump)
+                elif event.key == pygame.K_PAGEUP:
+                    T = max(0, T - jump)
+
+                # Début / fin
+                elif event.key == pygame.K_HOME:
+                    T = 0
+                elif event.key == pygame.K_END:
+                    T = N_STEPS - 1
+
+                # Saisie d'un nombre pour aller à T (optionnel)
+                elif event.key == pygame.K_RETURN:
+                    if typed.strip().isdigit():
+                        T = max(0, min(N_STEPS - 1, int(typed)))
+                    typed = ""
+
+                elif event.key == pygame.K_BACKSPACE:
+                    typed = typed[:-1]
+
+                else:
+                    # capture chiffres (0-9)
+                    if event.unicode.isdigit():
+                        typed += event.unicode
+
+            # Roulette souris : avancer/reculer (optionnel)
+            elif event.type == pygame.MOUSEWHEEL:
+                if event.y > 0:
+                    T = min(N_STEPS - 1, T + 1)
+                elif event.y < 0:
+                    T = max(0, T - 1)
+
 
         # --- Draw ---
 
@@ -118,15 +168,22 @@ def main():
         for id in range(N_AGENTS):
             draw_agent(screen, log_pos_agents[T][id], log_charges[T][id])
             x,y = log_pos_agents[T][id]
-            if tiles[y][x] == -1 :
-                print("alerte")
-        T+=1
+        if not paused:
+            T += step_per_frame
+            if T >= N_STEPS:
+                T = 0
+
         if T >= N_STEPS:
             T = 0
 
+
+
         grid_px = GRID_SIZE * TILE_SIZE
         info_lines = [
-        f"Step: {T}"]
+            f"Step: {T}/{N_STEPS-1}",
+            f"{'PAUSE' if paused else 'PLAY'}",
+            f"Aller à: {typed}"  # affiche les chiffres tapés
+        ]
         draw_sidebar(screen, grid_px, grid_px, info_lines, title="Plateau")
         pygame.display.flip()
         clock.tick(3)
