@@ -267,19 +267,18 @@ class SaveBestOfSelectedGens(neat.reporting.BaseReporter):
         self.gens_to_save = set(gens_to_save)
         self.out_dir = out_dir
         self.gen = -1
-        os.makedirs(out_dir, exist_ok=True)
 
     def start_generation(self, generation):
         self.gen = generation
 
     def post_evaluate(self, config, population, species, best_genome):
         if self.gen in self.gens_to_save:
-            path = os.path.join(self.out_dir, f"best_gen_{self.gen}.pkl")
+            path =self.out_dir+"/" f"best_gen_{self.gen}.pkl"
             with open(path, "wb") as f:
                 pickle.dump(best_genome, f)
             print(f"[SAVE] best genome gen {self.gen} -> {path}")
         if self.gen==21:
-            path = os.path.join(self.out_dir, f"random_gen_{self.gen}.pkl")
+            path =self.out_dir+"/" f"random_gen_{self.gen}.pkl"
             with open(path, "wb") as f:
                 pickle.dump(random.choice(list(population.values())), f)
             print(f"[SAVE] random genome gen {self.gen} -> {path}")
@@ -365,7 +364,7 @@ def run(config_file):
     try:
         winner = p.run(eval_genomes, N_gen)
     except neat.CompleteExtinctionException:
-        print("extinction occured")
+        print("extinction")
         winner = stats.best_genome()
 
     os.makedirs("saved_bests", exist_ok=True)
