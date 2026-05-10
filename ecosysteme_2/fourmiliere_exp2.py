@@ -8,8 +8,8 @@ import time
 carte = open("carte_fourmiliere_simple2.txt", "r")
 carte = [i.split(" ") for i in carte.readlines()]
 
-N_RUNS = 8
-N_STEPS = 250
+N_RUNS = 4
+N_STEPS = 300
 L = 25
 N_FOOD_INIT = 1
 SIZE_FOOD = 3
@@ -91,7 +91,7 @@ def eval(genome, config):
     fitness = 0
     net = neat.nn.FeedForwardNetwork.create(genome, config)
     for i_run in range(N_RUNS):
-        N_FOURMIS, tiles, map_agents, map_food, map_pheromones, positions, charge = init_simulation(i_run%4)
+        N_FOURMIS, tiles, map_agents, map_food, map_pheromones, positions, charge = init_simulation(i_run%2)
         for i_step in range(N_STEPS):
             map_pheromones *= (1 - FACTEUR_EVAPORATION)
             for i in range(len(positions)):
@@ -242,7 +242,7 @@ from pathlib import Path
 
 class SaveBestOfSelectedGens(neat.reporting.BaseReporter):
     def __init__(self, gens_to_save, out_dir="saved_bests"):
-        self.gens_to_save = set(gens_to_save)
+        self.gens_to_save = gens_to_save
         self.out_dir = out_dir
         self.gen = -1
         os.makedirs(out_dir, exist_ok=True)
@@ -252,10 +252,10 @@ class SaveBestOfSelectedGens(neat.reporting.BaseReporter):
 
     def post_evaluate(self, config, population, species, best_genome):
         if self.gen in self.gens_to_save:
-            path = os.path.join(self.out_dir, f"best_gen_{self.gen}.pkl")
+            path = self.out_dir+ "best_gen_"+str(self.gen)+".pkl"
             with open(path, "wb") as f:
                 pickle.dump(best_genome, f)
-            print(f"[SAVE] best genome gen {self.gen} -> {path}")
+            print(f"ENREGISTREMENT DU MEILLEUR GENOME DE LA GEN {self.gen} -> {path}")
 
 def replay_logs(gens_to_record, config, in_dir="saved_bests"):
     for g in gens_to_record:
@@ -265,7 +265,7 @@ def replay_logs(gens_to_record, config, in_dir="saved_bests"):
                 genome = pickle.load(f)
 
                 register_run(genome, g, config)
-                print(f"[LOG] replay gen {g} terminé")
+                print(f"[LOG] replay gen {g} enregistré")
         except:
             break
     path = os.path.join(in_dir, "winner.pkl")
@@ -273,7 +273,7 @@ def replay_logs(gens_to_record, config, in_dir="saved_bests"):
         genome = pickle.load(f)
 
         register_run(genome, "best", config)
-        print(f"[LOG] replay gen {g} terminé")
+        print(f"[LOG] replay gen {g} terenregistréminé")
 
 def run(config_file):
     config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
@@ -313,7 +313,7 @@ def run(config_file):
 
     replay_logs(gens_to_record, config)
 
-config_path = r"config_genomes2.txt"
+config_path = r"config_genomes2_exp2.txt"
 config_path = str(config_path)
 
 if __name__ == "__main__":

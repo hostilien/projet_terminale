@@ -5,48 +5,49 @@ import neat
 import random
 import matplotlib.pyplot as plt
 import time
-carte = open("ecosysteme_2/carte_fourmiliere.txt", "r")
+carte = open("carte_fourmiliere_simple1-mur.txt", "r")
 carte = [i.split(" ") for i in carte.readlines()]
-G=9999
-N_STEPS = 150
-L =25
-N_FOOD_INIT = 5
+
+N_RUNS = 20
+N_STEPS = 100
+L = 25
+N_FOOD_INIT = 1
 SIZE_FOOD = 3
 FACTEUR_EVAPORATION = 0.1
-N_FOURMIS = 4
+N_FOURMIS = 25
+
 def add_food(map_food):
-    x,y = random.randint(0,L-1), random.randint(0,L-1)
-    while (x**2+y**2)**(1/2) < 8: 
-        x,y = random.randint(0,L-1), random.randint(0,L-1)
+    x, y = random.randint(0, L - 1), random.randint(0, L - 1)
+    while (x**2 + y**2) ** (1 / 2) < 8:
+        x, y = random.randint(0, L - 1), random.randint(0, L - 1)
     for dx in [-1, 0, 1]:
         for dy in [-1, 0, 1]:
             nx, ny = x + dx, y + dy
             if 0 <= nx < L and 0 <= ny < L:
                 if carte[nx][ny] == '0':
-                    map_food[nx][ny] += SIZE_FOOD # ajouter de la nourriture
+                    map_food[nx][ny] += SIZE_FOOD
     return map_food
 
 def init_simulation():
-    N_POPULATION = 4
+    N_POPULATION = 25
     tiles = [[int(carte[i][j]) for j in range(L)] for i in range(L)]
-    map_agents = [[0 for _ in range(L)] for _ in range(L)] # 0 = case vide, >0 = id agent
+    map_agents = [[0 for _ in range(L)] for _ in range(L)]
     map_food = [[0 for _ in range(L)] for _ in range(L)]
     map_pheromones = np.zeros((L, L))
     charge = [0 for _ in range(N_POPULATION)]
-    indices_positions = [(i,j) for i in range(L) for j in range(L) if tiles[i][j] == 1] #on commence sur la fourmilière
+    indices_positions = [(i, j) for i in range(L) for j in range(L) if tiles[i][j] == 1]
+    tuiles_fertiles = [(i, j) for i in range(L) for j in range(L) if tiles[i][j] == 3]
     for i in range(N_POPULATION):
         x, y = indices_positions[i]
-        map_agents[x][y] = i+1  #les fourmis sont numérotées de 1 à N_POPULATION
-    for _ in range(N_FOOD_INIT):
-        x,y = random.randint(0,L-1), random.randint(0,L-1)
-        while (x**2+y**2)**(1/2) < 8: 
-            x,y = random.randint(0,L-1), random.randint(0,L-1)
+        map_agents[x][y] = i + 1
+    tuiles_nourriture = random.sample(tuiles_fertiles, N_FOOD_INIT)
+    #tuiles_nourriture = [tuiles_fertiles[seed]]
+    for i in range(N_FOOD_INIT):
+        x,y = tuiles_nourriture[i]
         for dx in [-1, 0, 1]:
             for dy in [-1, 0, 1]:
-                nx, ny = x + dx, y + dy
-                if 0 <= nx < L and 0 <= ny < L:
-                    if carte[nx][ny] == '0':
-                        map_food[nx][ny] += SIZE_FOOD
+                map_food[x+dx][y+dy]=1
+        
     return N_POPULATION, tiles, map_agents, map_food, map_pheromones, indices_positions, charge
 
 def vision(pos):
@@ -75,8 +76,8 @@ def vision(pos):
                 vision.append(map_pheromones[nx][ny])
             else:
                 vision.append(-1)  # mur
-    vision.append(x)
-    vision.append(y)
+    vision.append(x-13)
+    vision.append(y-13)
     num_individu = map_agents[x][y]
     vision.append(charge[num_individu - 1])  # charge de la fourmi
     return vision
@@ -111,10 +112,9 @@ def simulation(net):
                 elif direction==5:
                     dx, dy = deplacement[random.randint(0,3)]  # déplacement aléatoire
 
-                elif direction!=6:
-
-                    dx, dy = deplacement[direction]
-
+                else:
+                    dx,dy = deplacement[direction]
+                   
                 nx, ny = x + dx, y + dy
                 if 0 <= nx < L and 0 <= ny < L and map_agents[nx][ny] == 0 and tiles[nx][ny] != -1:  # vérifier que la case est libre et pas un mur
                     map_agents[x][y] = 0
@@ -126,9 +126,11 @@ def simulation(net):
                         map_food[nx][ny] -= 1
                     elif tiles[nx][ny] == 1 and charge[num_individu - 1] == 1:
                         charge[num_individu - 1] = 0                                       
-
-                map_pheromones[x][y] += output[6]
-    log = open("logs/log"+str(G)+".txt", "w")
+                if charge[num_individu - 1]==0:
+                    map_pheromones[x][y] += 0.5
+                else:
+                    map_pheromones[x][y]+=1.0
+    log = open("exp1/log_random_bloque_gen21.txt", "w")
     for step in range(N_STEPS):
         for pos in log_positions[step]:
             log.write(str(pos)+" ")
@@ -153,7 +155,7 @@ def simulation(net):
 
 def run(config_file):
     #Importer le genome#
-    WINNER_PATH = "ecosysteme_2/winner.pkl"
+    WINNER_PATH = "exp1/random_gen_21.pkl"
     config = neat.Config(
         neat.DefaultGenome,
         neat.DefaultReproduction,
@@ -169,7 +171,7 @@ def run(config_file):
 
     
 from pathlib import Path
-config_path = r"ecosysteme_2/config_genomes2.txt"
+config_path = r"config_genomes2_exp2.txt"
 config_path = str(config_path)
 
 

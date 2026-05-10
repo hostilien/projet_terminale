@@ -1,0 +1,77 @@
+[NEAT]
+fitness_criterion         = max
+fitness_threshold         = 153
+pop_size                  = 60
+reset_on_extinction       = False
+no_fitness_termination    = False
+
+[DefaultGenome]
+num_inputs                = 21
+num_outputs               = 6
+num_hidden                = 0
+feed_forward              = True
+initial_connection        = partial 0.35
+
+activation_default        = sigmoid
+activation_mutate_rate    = 0.06
+activation_options        = sigmoid tanh relu sin
+
+aggregation_default       = sum
+aggregation_mutate_rate   = 0.0
+aggregation_options       = sum
+
+weight_init_mean          = 0.0
+weight_init_stdev         = 1.1
+weight_max_value          = 10.0
+weight_min_value          = -10.0
+weight_mutate_rate        = 0.28
+weight_mutate_power       = 0.38
+weight_replace_rate       = 0.035
+weight_init_type          = gaussian
+
+bias_init_mean            = 0.0
+bias_init_stdev           = 0.9
+bias_max_value            = 10.0
+bias_min_value            = -10.0
+bias_mutate_rate          = 0.22
+bias_mutate_power         = 0.25
+bias_replace_rate         = 0.03
+bias_init_type            = gaussian
+
+response_init_mean        = 1.0
+response_init_stdev       = 0.0
+response_max_value        = 30.0
+response_min_value        = -30.0
+response_mutate_rate      = 0.0
+response_mutate_power     = 0.0
+response_replace_rate     = 0.0
+response_init_type        = gaussian
+
+conn_add_prob             = 0.06
+conn_delete_prob          = 0.006
+node_add_prob             = 0.055
+node_delete_prob          = 0.003
+
+enabled_default           = True
+enabled_mutate_rate       = 0.012
+enabled_rate_to_true_add  = 0.0
+enabled_rate_to_false_add = 0.0
+
+single_structural_mutation = true
+structural_mutation_surer = default
+
+compatibility_disjoint_coefficient = 1.0
+compatibility_weight_coefficient   = 0.45
+
+[DefaultSpeciesSet]
+compatibility_threshold   = 4.2
+
+[DefaultStagnation]
+species_fitness_func      = mean
+max_stagnation            = 15
+species_elitism           = 1
+
+[DefaultReproduction]
+elitism                   = 4
+min_species_size          = 3
+survival_threshold        = 0.32
